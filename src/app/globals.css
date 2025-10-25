@@ -1,42 +1,66 @@
+/* Custom CSS for QuantumNexa CRM */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0f172a; /* slate-900 */
+  --panel: #111827; /* gray-900 */
+  --muted: #9ca3af; /* gray-400 */
+  --text: #e5e7eb; /* gray-200 */
+  --primary: #22d3ee; /* cyan-400 */
+  --accent: #a78bfa; /* violet-400 */
+  --danger: #ef4444; /* red-500 */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+html, body {
+  height: 100%;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+a { color: var(--primary); text-decoration: none; }
+button, input, select, textarea { font: inherit; }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-}
+.container { max-width: 1600px; margin: 0 auto; padding: 24px; }
+.header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid #1f2937; background: var(--panel); position: sticky; top: 0; z-index: 10; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: 0.4px; }
+.brand-badge { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 0 0 2px rgba(255,255,255,0.06); }
+
+.card { background: var(--panel); border: 1px solid #1f2937; border-radius: 10px; padding: 16px; }
+.card + .card { margin-top: 16px; }
+
+.title { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+.muted { color: var(--muted); }
+
+.input, .select, .textarea { width: 100%; background: #0b1220; border: 1px solid #1f2937; color: var(--text); padding: 10px 12px; border-radius: 8px; outline: none; }
+.input:focus, .select:focus, .textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2); }
+
+.row { display: flex; gap: 12px; }
+.row > * { flex: 1; }
+
+.btn { display: inline-flex; align-items: center; gap: 8px; background: #0b1220; border: 1px solid #1f2937; color: var(--text); padding: 10px 12px; border-radius: 8px; cursor: pointer; }
+.btn:hover { border-color: var(--primary); }
+.btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #0b1220; border: none; }
+.btn-danger { border-color: var(--danger); color: #fecaca; }
+
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { border-bottom: 1px solid #1f2937; padding: 10px; text-align: left; }
+.table th { color: var(--muted); font-weight: 500; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+.badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px; font-size: 12px; background: #0b1220; border: 1px solid #1f2937; color: var(--muted); }
+
+.note { border-left: 2px solid var(--accent); padding-left: 12px; margin: 8px 0; }
+.timestamp { color: var(--muted); font-size: 12px; }
+
+/* Leads table column widths */
+.table.leads th:nth-child(4), .table.leads td:nth-child(4) { min-width: 320px; }
+.table.leads th:nth-child(5), .table.leads td:nth-child(5) { min-width: 200px; }
+.table.leads td:nth-child(4) { display: grid; gap: 6px; align-items: start; white-space: normal; }
+.table.leads td:nth-child(4) .badge { justify-self: start; }
+.table.leads td:nth-child(4) .select { width: 100%; display: block; }
+.table.leads th:last-child, .table.leads td:last-child { min-width: 240px; }
