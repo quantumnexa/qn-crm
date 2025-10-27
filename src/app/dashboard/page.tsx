@@ -268,8 +268,192 @@ export default function DashboardPage() {
   return (
     <div className="grid">
       {me.role === 'admin' ? (
-          <div />
-        ) : (
+        <>
+          <div className="card" style={{ gridColumn: '1 / -1' }}>
+            <div className="title">Admin Dashboard</div>
+            <div className="row" style={{ gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+              <div className="muted">Total: {totalLeadsCount}</div>
+              <div className="muted">Assigned: {assignedCount}</div>
+              <div className="muted">Unassigned: {unassignedCount}</div>
+            </div>
+            <div className="row" style={{ gap: 12, flexWrap: 'wrap' }}>
+              <input
+                className="input"
+                placeholder="Search by name, email, company, phone"
+                value={leadQuery}
+                onChange={(e) => setLeadQuery(e.target.value)}
+                style={{ minWidth: 280 }}
+              />
+              <select
+                className="input"
+                value={leadAssignedFilter}
+                onChange={(e) => setLeadAssignedFilter(e.target.value as any)}
+              >
+                <option value="all">All</option>
+                <option value="assigned">Assigned</option>
+                <option value="unassigned">Unassigned</option>
+                <option value="by_user">By Employee</option>
+              </select>
+              {leadAssignedFilter === 'by_user' && (
+                <select
+                  className="input"
+                  value={filterUserId}
+                  onChange={(e) => setFilterUserId(e.target.value)}
+                >
+                  <option value="">— Select Employee —</option>
+                  {salesUsers.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name} ({countsByUser[u.id] || 0})</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>
+
+          <div className="card" style={{ gridColumn: '1 / -1' }}>
+            <div className="title">Bulk Assign (Unassigned in Current View)</div>
+            <div className="row" style={{ gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+              <select className="input" value={bulkUserA} onChange={(e) => setBulkUserA(e.target.value)}>
+                <option value="">Employee A</option>
+                {salesUsers.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+              <select className="input" value={bulkUserB} onChange={(e) => setBulkUserB(e.target.value)}>
+                <option value="">Employee B</option>
+                {salesUsers.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+              <button className="btn" onClick={onBulkAssign}>Assign Alternately</button>
+            </div>
+            <p className="muted">Unassigned in view: {unassignedFilteredCount} · Expected A: {expectedA}, B: {expectedB}</p>
+          </div>
+
+          <div className="card" style={{ gridColumn: '1 / -1' }}>
+            <div className="title">Upload Leads (CSV/Excel)</div>
+            <form onSubmit={onUploadCSV} className="row" style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <input name="file" type="file" accept=".csv,.xlsx,.xls" onChange={onFileSelected} />
+              <button className="btn btn-primary" type="submit" disabled={uploadParsing}>Upload</button>
+              {uploadFileName && <span className="muted">{uploadFileName}</span>}
+              {uploadParsing && <span className="muted">Parsing…</span>}
+              {uploadParseError && <span style={{ color: '#fca5a5' }}>{uploadParseError}</span>}
+            </form>
+            {uploadPreviewRows.length > 0 && (
+              <div style={{ marginTop: 12, overflowX: 'auto' }}>
+                <table className="table" style={{ minWidth: 800 }}>
+                  <thead>
+                    <tr>
+                      {uploadPreviewCols.map((c) => (<th key={c} className="px-4 py-2 text-left">{c}</th>))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {uploadPreviewRows.slice(0, 10).map((r, i) => (
+                      <tr key={`prev-${i}`}>
+                        {uploadPreviewCols.map((c) => (<td key={`prev-${i}-${c}`}>{String((r as any)[c] ?? '')}</td>))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="muted">Showing first 10 rows</p>
+              </div>
+            )}
+          </div>
+
+          <div className="card" style={{ gridColumn: '1 / -1' }}>
+            <div className="title">Leads</div>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table leads" style={{ minWidth: 1400, whiteSpace: 'nowrap' }}>
+                <thead>
+                  <tr>
+                    <th>S.no</th>
+                    <th className="px-4 py-2 text-left">Email</th>
+                    <th className="px-4 py-2 text-left">Phone</th>
+                    <th className="px-4 py-2 text-left">Platform</th>
+                    <th className="px-4 py-2 text-left">Preferred Time</th>
+                    <th className="px-4 py-2 text-left">Start Timeline</th>
+                    <th className="px-4 py-2 text-left">Website</th>
+                    <th className="px-4 py-2 text-left">Business Details</th>
+                    <th className="px-4 py-2 text-left">Assign To</th>
+                    <th className="px-4 py-2 text-left">Closed Amount</th>
+                    <th className="px-4 py-2 text-left">Commission (10%)</th>
+                    <th className="px-4 py-2 text-left">Recurring (3%)</th>
+                    {Array.from({ length: maxNotesCount }).map((_, i) => (
+                      <th key={`follow-h-admin-${i}`} className="px-4 py-2 text-left">{`Follow Up ${i + 1}`}</th>
+                    ))}
+                    <th className="px-4 py-2 text-left">Add Follow Up</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredLeads.map((l, idx) => (
+                    <tr key={l.id}>
+                      <td>{idx + 1}</td>
+                      <td>
+                        <Link href={`/leads/${encodeURIComponent(l.id)}`}>{l.email}</Link>
+                      </td>
+                      <td>{l.phone || '—'}</td>
+                      <td>{l.platform || '—'}</td>
+                      <td>{l.preferredTime || '—'}</td>
+                      <td>{l.startTimeline || '—'}</td>
+                      <td>{
+                        typeof l.hasWebsite === 'boolean'
+                          ? (l.hasWebsite ? 'Yes' : 'No')
+                          : (typeof l.hasWebsite === 'string'
+                              ? ((['yes','y','true'].includes(l.hasWebsite.toLowerCase().trim())) ? 'Yes' : ((['no','n','false'].includes(l.hasWebsite.toLowerCase().trim())) ? 'No' : l.hasWebsite))
+                              : '—')
+                      }</td>
+                      <td>{l.businessDetails || '—'}</td>
+                      <td>
+                        <select
+                          className="input"
+                          style={{ minWidth: 160 }}
+                          value={l.assignedTo ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val) return;
+                            onAssign(l.id, val);
+                          }}
+                        >
+                          <option value="">— Select —</option>
+                          {salesUsers.map((u) => (
+                            <option key={u.id} value={u.id}>{u.name}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <form onSubmit={(e) => { e.preventDefault(); onUpdateClosedAmount(l.id); }}>
+                          <input
+                            className="input"
+                            type="number"
+                            step="0.01"
+                            placeholder="Closed amount"
+                            value={closedInputs[l.id] ?? (typeof l.closedAmount === 'number' ? String(l.closedAmount) : '')}
+                            onChange={(e) => setClosedInputs((prev) => ({ ...prev, [l.id]: e.target.value }))}
+                          />
+                        </form>
+                      </td>
+                      <td>{typeof l.closedAmount === 'number' ? (l.closedAmount * 0.10).toFixed(2) : '—'}</td>
+                      <td>{typeof l.closedAmount === 'number' ? (isRecurringEligible(l.closedMonth) ? (l.closedAmount * 0.03).toFixed(2) : '—') : '—'}</td>
+                      {Array.from({ length: maxNotesCount }).map((_, i) => (
+                        <td key={`fu-admin-${l.id}-${i}`}>{(l.notes?.[i]?.content) || '—'}</td>
+                      ))}
+                      <td>
+                        <form onSubmit={(e) => { e.preventDefault(); const val = (followInputs[l.id] || '').trim(); if (!val) return; onAddFollowQuick(l.id, val); }}>
+                          <input
+                            className="input"
+                            placeholder={`Follow up ${(l.notes?.length || 0) + 1}`}
+                            value={followInputs[l.id] || ''}
+                            onChange={(e) => setFollowInputs((prev) => ({ ...prev, [l.id]: e.target.value }))}
+                          />
+                        </form>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      ) : (
            <div className="card" style={{ gridColumn: '1 / -1' }}>
              <div className="title">My Leads</div>
           <div style={{ overflowX: 'auto' }}>
