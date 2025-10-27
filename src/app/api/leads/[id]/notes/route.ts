@@ -4,6 +4,8 @@ import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
+export const runtime = 'nodejs';
+
 async function authorize(session: SessionData | undefined, leadAssignedTo: string | null | undefined) {
   if (!session || !session.user) return false;
   if (session.user.role === 'admin') return true;

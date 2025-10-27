@@ -6,6 +6,8 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { parse } from 'csv-parse/sync';
 import * as XLSX from 'xlsx';
 
+export const runtime = 'nodejs';
+
 async function getSession() {
   const cookieStore = await cookies();
   return getIronSession<SessionData>(cookieStore, sessionOptions);
