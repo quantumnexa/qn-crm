@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { parse } from 'csv-parse/sync';
 import * as XLSX from 'xlsx';
 
@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('leads')
     .select('*');
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  let rows = data || [];
+  let rows = (data as any[]) || [];
   if (session.user.role !== 'admin') {
     rows = rows.filter((r: any) => r.assigned_to === session.user!.id);
   }
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Fetch existing emails from DB for deduplication
+  const supabaseAdmin = getSupabaseAdmin();
   const { data: existingRows, error: exErr } = await supabaseAdmin
     .from('leads')
     .select('email');
@@ -158,7 +160,7 @@ export async function POST(req: NextRequest) {
 
   const { data: inserted, error: insErr } = await supabaseAdmin
     .from('leads')
-    .insert(insertRows)
+    .insert(insertRows as any)
     .select('id');
 
   if (insErr) {

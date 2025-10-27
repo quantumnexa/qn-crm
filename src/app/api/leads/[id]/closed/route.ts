@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const runtime = 'nodejs';
 
@@ -14,6 +14,7 @@ async function authorize(session: SessionData | undefined, leadAssignedTo: strin
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
+  const supabaseAdmin = getSupabaseAdmin();
   const { id: paramId } = await context.params;
   const leadIdParam = (paramId ?? '').trim();
   const leadIdFromPath = req.nextUrl?.pathname?.split('/')?.[3] ?? '';
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     return NextResponse.json({ error: status === 404 ? 'Not found' : selErr.message }, { status });
   }
 
-  const ok = await authorize(session, existing.assigned_to || null);
+  const ok = await authorize(session, (existing as any).assigned_to || null);
   if (!ok) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   let body: any = {};
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     ? String(closedMonth)
     : new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-  const { error: updErr } = await supabaseAdmin
+  const { error: updErr } = await (supabaseAdmin as any)
     .from('leads')
     .update({ closed_amount: amt, closed_month: monthIso, updated_at: new Date().toISOString() })
     .eq('id', leadId);

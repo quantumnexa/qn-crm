@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const runtime = 'nodejs';
 
@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
   if (!session.user || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from('sales_users')
     .select('user_id,email,display_name,role')
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Only sales users can be created here' }, { status: 400 });
   }
 
+  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error?.message || 'User creation failed' }, { status: 400 });
   }
 
-  const { error: insErr } = await supabaseAdmin
+  const { error: insErr } = await (supabaseAdmin as any)
     .from('sales_users')
     .insert({
       user_id: data.user.id,

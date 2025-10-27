@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
   const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+  const supabaseAdmin = getSupabaseAdmin();
 
   if (!session.user || session.user.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     for (const lid of targetIds) {
       const toUser = i % 2 === 0 ? userA : userB;
       i++;
-      const { error: updErr } = await supabaseAdmin
+      const { error: updErr } = await (supabaseAdmin as any)
         .from('leads')
         .update({ assigned_to: toUser, updated_at: new Date().toISOString() })
         .eq('id', lid);

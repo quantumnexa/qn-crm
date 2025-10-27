@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const runtime = 'nodejs';
 
@@ -14,6 +14,7 @@ async function authorize(session: SessionData | undefined, leadAssignedTo: strin
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
+  const supabaseAdmin = getSupabaseAdmin();
 
   // Robustly derive lead id from params or URL path
   const { id: paramId } = await context.params;
@@ -35,16 +36,16 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
     return NextResponse.json({ error: status === 404 ? 'Not found' : error.message }, { status });
   }
 
-  const ok = await authorize(session, data.assigned_to || null);
+  const ok = await authorize(session, (data as any).assigned_to || null);
   if (!ok) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const ts = data.updated_at || data.created_at || new Date().toISOString();
+  const ts = (data as any).updated_at || (data as any).created_at || new Date().toISOString();
   const notes = [] as any[];
   for (let i = 1; i <= 10; i++) {
-    const key = `follow_up_${i}` as keyof typeof data;
+    const key = `follow_up_${i}` as keyof any;
     const content = (data as any)[key];
     if (content && String(content).trim().length > 0) {
-      notes.push({ id: `f${i}`, userId: data.assigned_to || '', content: String(content), createdAt: ts });
+      notes.push({ id: `f${i}`, userId: (data as any).assigned_to || '', content: String(content), createdAt: ts });
     }
   }
 
@@ -53,6 +54,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
+  const supabaseAdmin = getSupabaseAdmin();
 
   // Robustly derive lead id from params or URL path
   const { id: paramId } = await context.params;
@@ -73,7 +75,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     return NextResponse.json({ error: status === 404 ? 'Not found' : selErr.message }, { status });
   }
 
-  const ok = await authorize(session, existing.assigned_to || null);
+  const ok = await authorize(session, (existing as any).assigned_to || null);
   if (!ok) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
@@ -84,7 +86,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
 
   let targetIndex: number | null = null;
   for (let i = 1; i <= 10; i++) {
-    const key = `follow_up_${i}` as keyof typeof existing;
+    const key = `follow_up_${i}` as keyof any;
     const val = (existing as any)[key];
     if (!val || String(val).trim().length === 0) {
       targetIndex = i;
@@ -100,7 +102,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
   const now = new Date().toISOString();
   const updatePayload: Record<string, any> = { [col]: content.trim(), updated_at: now };
 
-  const { error: updErr } = await supabaseAdmin
+  const { error: updErr } = await (supabaseAdmin as any)
     .from('leads')
     .update(updatePayload)
     .eq('id', leadId);

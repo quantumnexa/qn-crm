@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const runtime = 'nodejs';
 
@@ -12,6 +12,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
   if (!session.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  const supabaseAdmin = getSupabaseAdmin();
 
   // Robustly derive lead id from params or URL path
   const { id: paramId } = await context.params;
@@ -33,22 +34,23 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
     return NextResponse.json({ error: status === 404 ? 'Not found' : error.message }, { status });
   }
 
-  if (session.user.role !== 'admin' && data.assigned_to !== session.user.id) {
+  if (session.user.role !== 'admin' && (data as any).assigned_to !== session.user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  const d: any = data as any;
   const lead = {
-    id: String(data.id),
-    name: data.full_name || '',
-    email: data.email || '',
-    phone: data.phone || '',
-    company: data.company || '',
-    platform: data.platform || '',
-    preferredTime: data.preferred_call_time || '',
-    startTimeline: data.start_timeline || '',
-    hasWebsite: typeof data.has_website === 'boolean' ? data.has_website : undefined,
-    businessDetails: data.business_details || '',
-    assignedTo: data.assigned_to || null,
+    id: String(d.id),
+    name: d.full_name || '',
+    email: d.email || '',
+    phone: d.phone || '',
+    company: d.company || '',
+    platform: d.platform || '',
+    preferredTime: d.preferred_call_time || '',
+    startTimeline: d.start_timeline || '',
+    hasWebsite: typeof d.has_website === 'boolean' ? d.has_website : undefined,
+    businessDetails: d.business_details || '',
+    assignedTo: d.assigned_to || null,
     notes: [],
   };
 
