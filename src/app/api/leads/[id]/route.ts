@@ -4,7 +4,7 @@ import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
   const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
   if (!session.user) {
@@ -12,7 +12,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 
   // Robustly derive lead id from params or URL path
-  const leadIdParam = (params?.id ?? '').trim();
+  const { id: paramId } = await context.params;
+  const leadIdParam = (paramId ?? '').trim();
   const leadIdFromPath = req.nextUrl?.pathname?.split('/')?.[3] ?? '';
   const leadId = decodeURIComponent(leadIdParam || leadIdFromPath || '');
   if (!leadId) {

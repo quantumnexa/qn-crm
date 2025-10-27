@@ -10,10 +10,10 @@ async function authorize(session: SessionData | undefined, leadAssignedTo: strin
   return !!leadAssignedTo && leadAssignedTo === session.user.id;
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
-
-  const leadIdParam = (params?.id ?? '').trim();
+  const { id: paramId } = await context.params;
+  const leadIdParam = (paramId ?? '').trim();
   const leadIdFromPath = req.nextUrl?.pathname?.split('/')?.[3] ?? '';
   const leadId = decodeURIComponent(leadIdParam || leadIdFromPath || '');
   if (!leadId) {
